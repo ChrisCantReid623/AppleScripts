@@ -1,0 +1,47 @@
+-- Sigma: Set all connected desktops' wallpapers to Pro Black
+set wallpaperPath to "/System/Library/Desktop Pictures/Pro Black.heic"
+
+tell application "System Events"
+	tell every desktop
+		set picture to wallpaperPath
+	end tell
+end tell
+
+-- Function to configure Dock settings
+on configureDock(dockPosition, hideDock)
+	try
+		-- Validate dockPosition input
+		if dockPosition is not in {"left", "right", "bottom"} then
+			log "Invalid Dock position: " & dockPosition
+			return
+		end if
+		
+		-- Set Dock position
+		log "Setting Dock position to " & dockPosition
+		do shell script "defaults write com.apple.dock orientation -string " & quoted form of dockPosition
+		
+		-- Set Dock hiding behavior
+		if hideDock then
+			log "Enabling Dock hiding."
+			do shell script "defaults write com.apple.dock autohide -bool true"
+		else
+			log "Disabling Dock hiding."
+			do shell script "defaults write com.apple.dock autohide -bool false"
+		end if
+		
+		-- Restart the Dock to apply changes
+		log "Restarting Dock to apply settings."
+		do shell script "killall Dock"
+		
+		log "Dock configuration complete: Position - " & dockPosition & ", Hiding - " & hideDock
+	on error errMsg
+		log "Failed to configure Dock: " & errMsg
+	end try
+end configureDock
+
+-- Variables to control Dock settings
+set dockPosition to "bottom" -- Change to "left", "right", or "bottom"
+set hideDock to false -- Set to true to hide the Dock, false to keep it visible
+
+-- Apply Dock settings
+--configureDock(dockPosition, hideDock)
