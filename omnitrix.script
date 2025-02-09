@@ -1,0 +1,79 @@
+-- Define wallpaper paths as key-value pairs (nested lists)
+set wallpaperPaths to {¬
+	{"0", "/Users/christopherreid/Pictures/Wallpapers/Omnitrix/0.jpg"} ¬
+		}
+
+-- Function to get wallpaper path by key (passing wallpaperPaths as an argument)
+on getWallpaperPath(wallpaperKey, wallpaperPaths)
+	repeat with pair in wallpaperPaths
+		if item 1 of pair is wallpaperKey then
+			return item 2 of pair
+		end if
+	end repeat
+	return missing value
+end getWallpaperPath
+
+-- Get the number of connected desktops
+tell application "System Events"
+	set desktopCount to count of desktops
+end tell
+
+-- Ask for user input with a blank input box
+display dialog "" default answer ""
+set userInput to text returned of result
+
+-- Check if input starts with a dot for specific desktop targeting
+if userInput starts with "." then
+	-- Extract desktop number and wallpaper choice
+	set desktopNumber to text 2 of userInput
+	set wallpaperChoice to text 3 thru -1 of userInput
+	
+	-- Validate the desktop number as an integer within range
+	if desktopNumber is not "" then
+		set desktopNumber to desktopNumber as integer
+	else
+		display dialog "Invalid desktop number." buttons {"OK"} default button "OK"
+		error "Invalid desktop number. Script stopped."
+	end if
+	
+	if desktopNumber < 1 or desktopNumber > desktopCount then
+		display dialog "Invalid desktop number. You have " & desktopCount & " desktops connected." buttons {"OK"} default button "OK"
+		error "Invalid desktop number. Script stopped."
+	end if
+	
+	-- Get the wallpaper path using the helper function
+	set selectedWallpaper to getWallpaperPath(wallpaperChoice, wallpaperPaths)
+	
+	-- Validate the selected wallpaper path
+	if selectedWallpaper is missing value then
+		display dialog "Invalid wallpaper code. Please enter a valid code." buttons {"OK"} default button "OK"
+		error "Invalid wallpaper code. Script stopped."
+	end if
+	
+	-- Apply the wallpaper to the specified desktop
+	tell application "System Events"
+		set picture of desktop desktopNumber to selectedWallpaper
+		log "Wallpaper set for desktop " & desktopNumber & "."
+	end tell
+	
+else
+	-- General case: Apply wallpaper to all desktops
+	set wallpaperChoice to userInput
+	
+	-- Get the wallpaper path using the helper function
+	set selectedWallpaper to getWallpaperPath(wallpaperChoice, wallpaperPaths)
+	
+	-- Validate the selected wallpaper path
+	if selectedWallpaper is missing value then
+		display dialog "Invalid wallpaper code. Please enter a valid code." buttons {"OK"} default button "OK"
+		error "Invalid wallpaper code. Script stopped."
+	end if
+	
+	-- Apply the wallpaper to all desktops
+	tell application "System Events"
+		repeat with i from 1 to desktopCount
+			set picture of desktop i to selectedWallpaper
+		end repeat
+		log "Wallpaper set for all desktops."
+	end tell
+end if
