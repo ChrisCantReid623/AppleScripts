@@ -1,0 +1,97 @@
+-- Function to activate an app
+on activateApp(appName)
+	try
+		tell application appName to activate
+	on error
+		-- Do nothing if unable to activate the app
+	end try
+end activateApp
+
+-- Function to quit a specific app
+on quitApp(appName)
+	try
+		tell application appName to quit
+	on error
+		-- Do nothing if unable to quit the app
+	end try
+end quitApp
+
+-- Function to quit all apps in a list
+on quitSpecificApps(appList)
+	repeat with appName in appList
+		quitApp(appName)
+	end repeat
+end quitSpecificApps
+
+-- Function to close all Finder windows
+on closeAllFinderWindows()
+	tell application "Finder"
+		close every window
+	end tell
+end closeAllFinderWindows
+
+-- Function to quit all visible apps excluding a list of apps
+on quitAllVisibleApps(excludedList)
+	tell application "System Events"
+		set visibleApps to (name of every process whose visible is true)
+	end tell
+	
+	repeat with appName in visibleApps
+		if appName is not in excludedList then
+			quitApp(appName)
+		end if
+	end repeat
+end quitAllVisibleApps
+
+-- Function to configure Dock settings
+on configureDock(dockPosition, hideDock)
+	try
+		-- Validate dockPosition input
+		if dockPosition is not in {"left", "right", "bottom"} then
+			log "Invalid Dock position: " & dockPosition
+			return
+		end if
+		
+		-- Set Dock position
+		log "Setting Dock position to " & dockPosition
+		do shell script "defaults write com.apple.dock orientation -string " & quoted form of dockPosition
+		
+		-- Set Dock hiding behavior
+		if hideDock then
+			log "Enabling Dock hiding."
+			do shell script "defaults write com.apple.dock autohide -bool true"
+		else
+			log "Disabling Dock hiding."
+			do shell script "defaults write com.apple.dock autohide -bool false"
+		end if
+		
+		-- Restart the Dock to apply changes
+		log "Restarting Dock to apply settings."
+		do shell script "killall Dock"
+		
+		log "Dock configuration complete: Position - " & dockPosition & ", Hiding - " & hideDock
+	on error errMsg
+		log "Failed to configure Dock: " & errMsg
+	end try
+end configureDock
+
+-- Main Script Logic
+set specificApps to {"Amethyst", "ChatGPT", "iwallpaper", "MonitorControl"}
+set excludedApps to {"Finder", "Eject"}
+
+-- Activate Darth.app to set all wallpapers to Pro Black
+activateApp("BB")
+
+-- Quit each specific app in the list
+quitSpecificApps(specificApps)
+
+-- Close all Finder windows
+closeAllFinderWindows()
+
+-- Quit all visible apps except excluded ones
+quitAllVisibleApps(excludedApps)
+
+-- Dock Configuration
+-- set dockPosition to "left" -- Change to "left", "right", or "bottom"
+-- set hideDock to false -- Set to true to hide the Dock, false to keep it visible
+-- configureDock(dockPosition, hideDock)--
